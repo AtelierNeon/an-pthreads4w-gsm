@@ -15,6 +15,14 @@ message(STATUS "Version ........... ${PTHREADS4W_VERSION}")
 
 project(pthreads4w VERSION ${PTHREADS4W_VERSION} LANGUAGES C)
 
+option(PTHREADS4W_WITHOUT_INSTALL_ALL "Build pthreads4w without installing all artifacts." OFF)
+option(PTHREADS4W_WITHOUT_INSTALL_FILES "Build pthreads4w without installing files." OFF)
+option(PTHREADS4W_WITHOUT_INSTALL_HEADERS "Build pthreads4w without installing headers." OFF)
+option(PTHREADS4W_WITHOUT_INSTALL_LIBRARIES "Build pthreads4w without installing libraries." OFF)
+option(PTHREADS4W_WITHOUT_TEST_APPS "Build pthreads4w without test apps." OFF)
+
+message(STATUS "pthreads4w version ${VERSION}")
+
 set(PTW32_VER ${PROJECT_VERSION_MAJOR}${EXTRAVERSION})
 #set(CMAKE_DEBUG_POSTFIX d)
 set (CMAKE_SHARED_LIBRARY_PREFIX "lib")
@@ -66,7 +74,7 @@ message(STATUS "Install Path ${CMAKE_INSTALL_PREFIX}")
 set(DLLDEST ${CMAKE_INSTALL_PREFIX}/bin)
 set(LIBDEST ${CMAKE_INSTALL_PREFIX}/lib)
 set(HDRDEST ${CMAKE_INSTALL_PREFIX}/include)
-set(TESTDEST ${CMAKE_INSTALL_PREFIX}/test)
+set(TESTDEST ${CMAKE_INSTALL_PREFIX}/bin)
 
 #################################
 # Defs                          #
@@ -117,11 +125,12 @@ macro(shared_lib type def)
     #    install(FILES ${CMAKE_BINARY_DIR}/${targ}${targ_suffix}.dll DESTINATION ${DLLDEST})
     #    install(FILES ${CMAKE_BINARY_DIR}/${targ}${targ_suffix}.lib DESTINATION ${LIBDEST})
     #endif()
-    install(TARGETS ${targ}
-        RUNTIME DESTINATION "${DLLDEST}"
-        ARCHIVE DESTINATION "${LIBDEST}"
-        LIBRARY DESTINATION "${LIBDEST}")
-
+    if(NOT PTHREADS4W_WITHOUT_INSTALL_LIBRARIES AND NOT PTHREADS4W_WITHOUT_INSTALL_ALL)
+        install(TARGETS ${targ}
+            RUNTIME DESTINATION "${DLLDEST}"
+            ARCHIVE DESTINATION "${LIBDEST}"
+            LIBRARY DESTINATION "${LIBDEST}")
+    endif()
 endmacro()
 
 macro(static_lib type def)
@@ -138,10 +147,12 @@ macro(static_lib type def)
     #else()
     #    install(FILES ${CMAKE_BINARY_DIR}/${targ}${targ_suffix}.lib DESTINATION ${LIBDEST})
     #endif()
-    install(TARGETS ${targ}
-        RUNTIME DESTINATION "${DLLDEST}"
-        ARCHIVE DESTINATION "${LIBDEST}"
-        LIBRARY DESTINATION "${LIBDEST}")
+    if(NOT PTHREADS4W_WITHOUT_INSTALL_LIBRARIES AND NOT PTHREADS4W_WITHOUT_INSTALL_ALL)
+        install(TARGETS ${targ}
+            RUNTIME DESTINATION "${DLLDEST}"
+            ARCHIVE DESTINATION "${LIBDEST}"
+            LIBRARY DESTINATION "${LIBDEST}")
+    endif()
 endmacro()
 
 shared_lib ( VCE __PTW32_CLEANUP_CXX )
@@ -155,12 +166,17 @@ static_lib ( VC  __PTW32_CLEANUP_C )
 #################################
 # Install                       #
 #################################
-install(FILES _ptw32.h pthread.h sched.h semaphore.h DESTINATION ${HDRDEST})
+if(NOT PTHREADS4W_WITHOUT_INSTALL_HEADERS AND NOT PTHREADS4W_WITHOUT_INSTALL_ALL)
+    install(FILES _ptw32.h pthread.h sched.h semaphore.h DESTINATION ${HDRDEST})
+endif()
 
 #################################
 # Test                          #
 #################################
 option(ENABLE_TESTS "Enable Test code build" FALSE)
+if(NOT PTHREADS4W_WITHOUT_TEST_APPS)
+    set(ENABLE_TESTS TRUE)
+endif()
 
 #TODO determine if cross compile...
 if(ENABLE_TESTS)

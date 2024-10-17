@@ -12,7 +12,7 @@ macro(add_testcase test type def)
     set(lib_test test-${test}${type}${PTW32_VER})
     set(dll_test test-dll-${test}${type}${PTW32_VER})
 
-    set(lib_lib libpthread${type}${PTW32_VER})
+    set(lib_lib pthread${type}${PTW32_VER}-static)
     set(dll_lib pthread${type}${PTW32_VER})
 
     set(c_dep "")
@@ -27,6 +27,8 @@ macro(add_testcase test type def)
         endif()
     endif()
 
+    set_source_files_properties(${test}.c PROPERTIES LANGUAGE CXX)
+
     add_executable(${lib_test} ${test}.c ${c_dep})
     target_link_libraries(${lib_test} ${lib_lib} ${XXLIBS})
     target_compile_definitions(${lib_test} PUBLIC "/nologo -D_CONSOLE -D_MBCS -D${def} ${extra}")
@@ -37,12 +39,18 @@ macro(add_testcase test type def)
     target_compile_definitions(${dll_test} PUBLIC "/nologo -D_CONSOLE -D_MBCS -D${def} ${extra}")
     add_dependencies(${dll_test} ${dll_lib})
 
-    if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
-        install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/tests/${lib_test}.exe DESTINATION ${TESTDEST})
-        install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/tests/${dll_test}.exe DESTINATION ${TESTDEST})
-    else()
-        install(FILES ${CMAKE_BINARY_DIR}/tests/${lib_test}.exe DESTINATION ${TESTDEST})
-        install(FILES ${CMAKE_BINARY_DIR}/tests/${dll_test}.exe DESTINATION ${TESTDEST})
+    #if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
+    #    install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/tests/${lib_test}.exe DESTINATION ${TESTDEST})
+    #    install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/tests/${dll_test}.exe DESTINATION ${TESTDEST})
+    #else()
+    #    install(FILES ${CMAKE_BINARY_DIR}/tests/${lib_test}.exe DESTINATION ${TESTDEST})
+    #    install(FILES ${CMAKE_BINARY_DIR}/tests/${dll_test}.exe DESTINATION ${TESTDEST})
+    #endif()
+    if(NOT PTHREADS4W_WITHOUT_INSTALL_FILES AND NOT PTHREADS4W_WITHOUT_INSTALL_ALL)
+        install(TARGETS ${lib_test}
+            RUNTIME DESTINATION "${TESTDEST}")
+        install(TARGETS ${dll_test}
+            RUNTIME DESTINATION "${TESTDEST}")
     endif()
 
     if(${type} MATCHES "VCE")
@@ -66,6 +74,7 @@ foreach(t ${TESTS})
     # exclusions
     if(${test} STREQUAL "benchlib")
         list(REMOVE_ITEM TESTS ${t})
+        set_source_files_properties(${test}.c PROPERTIES LANGUAGE CXX)
         continue()
     elseif(${test} STREQUAL "context2")    # SEGFAULT
         continue()
