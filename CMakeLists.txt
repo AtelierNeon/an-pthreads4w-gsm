@@ -1,22 +1,32 @@
 cmake_minimum_required(VERSION 3.11)
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "MinSizeRel" CACHE STRING "Choose the type of build, options are: Debug, Release, or MinSizeRel." FORCE)
-    message(STATUS "No build type specified, defaulting to MinSizeRel.")
-endif()
+#if(NOT CMAKE_BUILD_TYPE)
+#    set(CMAKE_BUILD_TYPE "MinSizeRel" CACHE STRING "Choose the type of build, options are: Debug, Release, or MinSizeRel." FORCE)
+#    message(STATUS "No build type specified, defaulting to MinSizeRel.")
+#endif()
 
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include (get_version)
 
 message(STATUS "Generator ......... ${CMAKE_GENERATOR}")
-message(STATUS "Build Type ........ ${CMAKE_BUILD_TYPE}")
+#message(STATUS "Build Type ........ ${CMAKE_BUILD_TYPE}")
 message(STATUS "Version ........... ${PTHREADS4W_VERSION}")
 
 project(pthreads4w VERSION ${PTHREADS4W_VERSION} LANGUAGES C)
 
+option(PTHREADS4W_WITHOUT_INSTALL_ALL "Build pthreads4w without installing all artifacts." OFF)
+option(PTHREADS4W_WITHOUT_INSTALL_FILES "Build pthreads4w without installing files." OFF)
+option(PTHREADS4W_WITHOUT_INSTALL_HEADERS "Build pthreads4w without installing headers." OFF)
+option(PTHREADS4W_WITHOUT_INSTALL_LIBRARIES "Build pthreads4w without installing libraries." OFF)
+option(PTHREADS4W_WITHOUT_TEST_APPS "Build pthreads4w without test apps." OFF)
+
+message(STATUS "pthreads4w version ${VERSION}")
+
 set(PTW32_VER ${PROJECT_VERSION_MAJOR}${EXTRAVERSION})
-set(CMAKE_DEBUG_POSTFIX d)
+#set(CMAKE_DEBUG_POSTFIX d)
+set (CMAKE_SHARED_LIBRARY_PREFIX "lib")
+#set (CMAKE_STATIC_LIBRARY_PREFIX "lib")
 
 # Uncomment this if config.h defines RETAIN_WSALASTERROR
 #set(XLIBS wsock32.lib)
@@ -56,15 +66,15 @@ endif()
 if(DIST_ROOT)
     set(CMAKE_INSTALL_PREFIX "${DIST_ROOT}")
 else()
-    set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/PTHREADS-BUILT")
+#    set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/PTHREADS-BUILT")
 endif()
 message(STATUS "Install Path ${CMAKE_INSTALL_PREFIX}")
 
 
-set(DLLDEST ${CMAKE_INSTALL_PREFIX}/${TARGET_ARCH}/${CMAKE_BUILD_TYPE}/bin)
-set(LIBDEST ${CMAKE_INSTALL_PREFIX}/${TARGET_ARCH}/${CMAKE_BUILD_TYPE}/lib)
-set(HDRDEST ${CMAKE_INSTALL_PREFIX}/${TARGET_ARCH}/${CMAKE_BUILD_TYPE}/include)
-set(TESTDEST ${CMAKE_INSTALL_PREFIX}/${TARGET_ARCH}/${CMAKE_BUILD_TYPE}/test)
+set(DLLDEST ${CMAKE_INSTALL_PREFIX}/bin)
+set(LIBDEST ${CMAKE_INSTALL_PREFIX}/lib)
+set(HDRDEST ${CMAKE_INSTALL_PREFIX}/include)
+set(TESTDEST ${CMAKE_INSTALL_PREFIX}/bin)
 
 #################################
 # Defs                          #
@@ -89,15 +99,15 @@ if(MSVC)
 endif()
 
 # Update filename with proper version info
-configure_file(${CMAKE_SOURCE_DIR}/cmake/version.rc.in ${CMAKE_BINARY_DIR}/version.rc @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.rc.in ${CMAKE_BINARY_DIR}/version.rc @ONLY)
 
 #################################
 # Libraries                     #
 #################################
-set(targ_suffix "")
-if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    set(targ_suffix ${CMAKE_DEBUG_POSTFIX})
-endif()
+#set(targ_suffix "")
+#if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+#    set(targ_suffix ${CMAKE_DEBUG_POSTFIX})
+#endif()
 
 macro(shared_lib type def)
     set(targ pthread${type}${PTW32_VER})
@@ -106,28 +116,42 @@ macro(shared_lib type def)
     target_compile_definitions(${targ} PUBLIC "-D${def}")
     if(${type} STREQUAL "VCE")
         set_target_properties(${targ} PROPERTIES COMPILE_FLAGS ${VCEFLAGS})
+        set_source_files_properties(pthread.c PROPERTIES LANGUAGE CXX)
     endif()
-    if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
-        install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${targ}${targ_suffix}.dll DESTINATION ${DLLDEST})
-        install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${targ}${targ_suffix}.lib DESTINATION ${LIBDEST})
-    else()
-        install(FILES ${CMAKE_BINARY_DIR}/${targ}${targ_suffix}.dll DESTINATION ${DLLDEST})
-        install(FILES ${CMAKE_BINARY_DIR}/${targ}${targ_suffix}.lib DESTINATION ${LIBDEST})
+    #if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
+    #    install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${targ}${targ_suffix}.dll DESTINATION ${DLLDEST})
+    #    install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${targ}${targ_suffix}.lib DESTINATION ${LIBDEST})
+    #else()
+    #    install(FILES ${CMAKE_BINARY_DIR}/${targ}${targ_suffix}.dll DESTINATION ${DLLDEST})
+    #    install(FILES ${CMAKE_BINARY_DIR}/${targ}${targ_suffix}.lib DESTINATION ${LIBDEST})
+    #endif()
+    if(NOT PTHREADS4W_WITHOUT_INSTALL_LIBRARIES AND NOT PTHREADS4W_WITHOUT_INSTALL_ALL)
+        install(TARGETS ${targ}
+            RUNTIME DESTINATION "${DLLDEST}"
+            ARCHIVE DESTINATION "${LIBDEST}"
+            LIBRARY DESTINATION "${LIBDEST}")
     endif()
 endmacro()
 
 macro(static_lib type def)
-    set(targ libpthread${type}${PTW32_VER})
+    set(targ pthread${type}${PTW32_VER}-static)
     add_library(${targ} STATIC pthread.c)
     message(STATUS ${targ})
     target_compile_definitions(${targ} PUBLIC "-D${def}" -D__PTW32_STATIC_LIB)
     if(${type} STREQUAL "VCE")
         set_target_properties(${targ} PROPERTIES COMPILE_FLAGS ${VCEFLAGS})
+        set_source_files_properties(pthread.c PROPERTIES LANGUAGE CXX)
     endif()
-    if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
-        install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${targ}${targ_suffix}.lib DESTINATION ${LIBDEST})
-    else()
-        install(FILES ${CMAKE_BINARY_DIR}/${targ}${targ_suffix}.lib DESTINATION ${LIBDEST})
+    #if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
+    #    install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${targ}${targ_suffix}.lib DESTINATION ${LIBDEST})
+    #else()
+    #    install(FILES ${CMAKE_BINARY_DIR}/${targ}${targ_suffix}.lib DESTINATION ${LIBDEST})
+    #endif()
+    if(NOT PTHREADS4W_WITHOUT_INSTALL_LIBRARIES AND NOT PTHREADS4W_WITHOUT_INSTALL_ALL)
+        install(TARGETS ${targ}
+            RUNTIME DESTINATION "${DLLDEST}"
+            ARCHIVE DESTINATION "${LIBDEST}"
+            LIBRARY DESTINATION "${LIBDEST}")
     endif()
 endmacro()
 
@@ -142,12 +166,17 @@ static_lib ( VC  __PTW32_CLEANUP_C )
 #################################
 # Install                       #
 #################################
-install(FILES _ptw32.h pthread.h sched.h semaphore.h DESTINATION ${HDRDEST})
+if(NOT PTHREADS4W_WITHOUT_INSTALL_HEADERS AND NOT PTHREADS4W_WITHOUT_INSTALL_ALL)
+    install(FILES _ptw32.h pthread.h sched.h semaphore.h DESTINATION ${HDRDEST})
+endif()
 
 #################################
 # Test                          #
 #################################
 option(ENABLE_TESTS "Enable Test code build" FALSE)
+if(NOT PTHREADS4W_WITHOUT_TEST_APPS)
+    set(ENABLE_TESTS TRUE)
+endif()
 
 #TODO determine if cross compile...
 if(ENABLE_TESTS)
