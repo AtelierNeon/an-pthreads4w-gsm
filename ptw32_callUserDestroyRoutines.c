@@ -184,7 +184,7 @@ __ptw32_callUserDestroyRoutines (pthread_t thread)
 
 		  assocsRemaining++;
 
-#if defined(__cplusplus)
+#if defined(__PTW32_CLEANUP_CXX)
 
 		  try
 		    {
@@ -207,14 +207,14 @@ __ptw32_callUserDestroyRoutines (pthread_t thread)
 		      terminate ();
 		    }
 
-#else /* __cplusplus */
+#else /* __PTW32_CLEANUP_CXX */
 
 		  /*
 		   * Run the caller's cleanup routine.
 		   */
 		  destructor (value);
 
-#endif /* __cplusplus */
+#endif /* __PTW32_CLEANUP_CXX */
 
 		}
 	      else
