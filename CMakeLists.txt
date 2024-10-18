@@ -1,16 +1,16 @@
 cmake_minimum_required(VERSION 3.11)
 
-#if(NOT CMAKE_BUILD_TYPE)
-#    set(CMAKE_BUILD_TYPE "MinSizeRel" CACHE STRING "Choose the type of build, options are: Debug, Release, or MinSizeRel." FORCE)
-#    message(STATUS "No build type specified, defaulting to MinSizeRel.")
-#endif()
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "MinSizeRel" CACHE STRING "Choose the type of build, options are: Debug, Release, or MinSizeRel." FORCE)
+    message(STATUS "No build type specified, defaulting to MinSizeRel.")
+endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include (get_version)
 
 message(STATUS "Generator ......... ${CMAKE_GENERATOR}")
-#message(STATUS "Build Type ........ ${CMAKE_BUILD_TYPE}")
+message(STATUS "Build Type ........ ${CMAKE_BUILD_TYPE}")
 message(STATUS "Version ........... ${PTHREADS4W_VERSION}")
 
 project(pthreads4w VERSION ${PTHREADS4W_VERSION} LANGUAGES C)
@@ -104,10 +104,10 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.rc.in ${CMAKE_BINARY_DI
 #################################
 # Libraries                     #
 #################################
-#set(targ_suffix "")
-#if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-#    set(targ_suffix ${CMAKE_DEBUG_POSTFIX})
-#endif()
+set(targ_suffix "")
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    set(targ_suffix ${CMAKE_DEBUG_POSTFIX})
+endif()
 
 macro(shared_lib type def)
     set(targ pthread${type}${PTW32_VER})
