@@ -1,17 +1,17 @@
 cmake_minimum_required(VERSION 3.11)
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "MinSizeRel" CACHE STRING "Choose the type of build, options are: Debug, Release, or MinSizeRel." FORCE)
-    message(STATUS "No build type specified, defaulting to MinSizeRel.")
-endif()
+#if(NOT CMAKE_BUILD_TYPE)
+#    set(CMAKE_BUILD_TYPE "MinSizeRel" CACHE STRING "Choose the type of build, options are: Debug, Release, or MinSizeRel." FORCE)
+#    message(STATUS "No build type specified, defaulting to MinSizeRel.")
+#endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include (get_version)
 
-message(STATUS "Generator ......... ${CMAKE_GENERATOR}")
-message(STATUS "Build Type ........ ${CMAKE_BUILD_TYPE}")
-message(STATUS "Version ........... ${PTHREADS4W_VERSION}")
+#message(STATUS "Generator ......... ${CMAKE_GENERATOR}")
+#message(STATUS "Build Type ........ ${CMAKE_BUILD_TYPE}")
+#message(STATUS "Version ........... ${PTHREADS4W_VERSION}")
 
 project(pthreads4w VERSION ${PTHREADS4W_VERSION} LANGUAGES C)
 
@@ -21,7 +21,7 @@ option(PTHREADS4W_WITHOUT_INSTALL_HEADERS "Build pthreads4w without installing h
 option(PTHREADS4W_WITHOUT_INSTALL_LIBRARIES "Build pthreads4w without installing libraries." OFF)
 option(PTHREADS4W_WITHOUT_TEST_APPS "Build pthreads4w without test apps." OFF)
 
-message(STATUS "pthreads4w version ${VERSION}")
+message(STATUS "pthreads4w version ${PROJECT_VERSION}")
 
 set(PTW32_VER ${PROJECT_VERSION_MAJOR}${EXTRAVERSION})
 #set(CMAKE_DEBUG_POSTFIX d)
@@ -54,11 +54,11 @@ elseif(${TARGET_ARCH} STREQUAL "x64")
 else()
     MESSAGE(ERROR "\"${TARGET_ARCH}\" not supported in version.rc")
 endif()
-message(STATUS "Target ............ ${TARGET_ARCH}")
+#message(STATUS "Target ............ ${TARGET_ARCH}")
 
-if(MSVC)
-    message(STATUS "MSVC Version ...... ${MSVC_VERSION}")
-endif()
+#if(MSVC)
+#    message(STATUS "MSVC Version ...... ${MSVC_VERSION}")
+#endif()
 
 #################################
 # Install Path                  #
@@ -68,7 +68,7 @@ if(DIST_ROOT)
 else()
 #    set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/PTHREADS-BUILT")
 endif()
-message(STATUS "Install Path ${CMAKE_INSTALL_PREFIX}")
+#message(STATUS "Install Path ${CMAKE_INSTALL_PREFIX}")
 
 
 set(DLLDEST ${CMAKE_INSTALL_PREFIX}/bin)
@@ -104,15 +104,15 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.rc.in ${CMAKE_BINARY_DI
 #################################
 # Libraries                     #
 #################################
-set(targ_suffix "")
-if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    set(targ_suffix ${CMAKE_DEBUG_POSTFIX})
-endif()
+#set(targ_suffix "")
+#if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+#    set(targ_suffix ${CMAKE_DEBUG_POSTFIX})
+#endif()
 
 macro(shared_lib type def)
     set(targ pthread${type}${PTW32_VER})
     add_library(${targ} SHARED pthread.c ${CMAKE_BINARY_DIR}/version.rc)
-    message(STATUS ${targ})
+    #message(STATUS ${targ})
     target_compile_definitions(${targ} PUBLIC "-D${def}")
     if(${type} STREQUAL "VCE")
         set_target_properties(${targ} PROPERTIES COMPILE_FLAGS ${VCEFLAGS})
@@ -136,7 +136,7 @@ endmacro()
 macro(static_lib type def)
     set(targ pthread${type}${PTW32_VER}-static)
     add_library(${targ} STATIC pthread.c)
-    message(STATUS ${targ})
+    #message(STATUS ${targ})
     target_compile_definitions(${targ} PUBLIC "-D${def}" -D__PTW32_STATIC_LIB)
     if(${type} STREQUAL "VCE")
         set_target_properties(${targ} PROPERTIES COMPILE_FLAGS ${VCEFLAGS})
